@@ -402,10 +402,30 @@ infrastructure (`adapters`). Add services as folders under `services/`.
 │
 ├── services/
 │   ├── order-service/          # write (order+outbox tx) + completion handler
-│   │   └── app/{domain,application,adapters,api}
-│   ├── outbox-publisher/       # DynamoDB Streams -> SNS
+│   │   └── app/
+│   │       ├── domain/         # Order entity, OrderStatus, business rules
+│   │       ├── application/    # CreateOrderUseCase, CompleteOrderHandler, ports
+│   │       ├── adapters/       # DynamoDbOrderRepo, SnsPublisher, RedisIdempotencyStore
+│   │       └── api/            # FastAPI routes: POST /orders, GET /orders/{id}
+│   │
 │   ├── inventory-service/      # OrderCreated -> reserve -> InventoryReserved
-│   └── payment-service/        # InventoryReserved -> charge -> PaymentCharged
+│   │   └── app/
+│   │       ├── domain/         # StockItem, Reservation, reservation rules
+│   │       ├── application/    # ReserveInventoryHandler, ports
+│   │       ├── adapters/       # DynamoDbStockRepo, SnsPublisher, RedisIdempotencyStore
+│   │       └── api/            # SQS consumer entry point (not HTTP)
+│   │
+│   ├── payment-service/        # InventoryReserved -> charge -> PaymentCharged
+│   │   └── app/
+│   │       ├── domain/         # Payment, Money, charge/validation rules
+│   │       ├── application/    # ChargePaymentHandler, ports
+│   │       ├── adapters/       # DynamoDbPaymentRepo, PaymentGatewayClient, SnsPublisher, RedisIdempotencyStore
+│   │       └── api/            # SQS consumer entry point (not HTTP)
+│   │
+│   └── outbox-publisher/       # DynamoDB Streams -> SNS  (pure plumbing: no domain)
+│       └── app/
+│           ├── application/    # publish loop: read stream -> publish -> mark published
+│           └── adapters/       # DynamoDbStreamReader, SnsPublisher
 │
 ├── ai/                         # v2+
 │   ├── embeddings/             # catalog -> vectors -> OpenSearch
