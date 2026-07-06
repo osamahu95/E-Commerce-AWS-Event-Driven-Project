@@ -1,0 +1,106 @@
+services:
+  # ---------- CORE (v1) : one emulator for all AWS ----------
+  # DynamoDB + DynamoDB Streams + SNS + SQS, all on port 4566.
+  localstack:
+    image: localstack/localstack:3
+    container_name: edop-localstack
+    profiles: ["core"]
+    ports:
+      - "4566:4566"                       # single "edge" endpoint for every AWS service
+    environment:
+      - SERVICES=dynamodb,dynamodbstreams,sns,sqs   # emulate ONLY what v1 needs
+      - AWS_DEFAULT_REGION=us-east-1
+      - DYNAMODB_SHARE_DB=1               # one shared DynamoDB -> no region/account "table not found"
+      - DEBUG=1                           # verbose logs while learning; set 0 later
+  # ---------- CORE (v1) : idempotency / dedup store ----------
+  redis:
+    image: redis:7-alpine
+    container_name: edop-redis
+    profiles: ["core"]
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]   # AOF persistence across restarts
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ==========================================================
+  #  DORMANT — defined now, activated version-by-version.
+  #  `docker compose up` (core) will NOT pull these images.
+  # ==========================================================
+
+  # -- Postgres : possible CQRS read model (later) --
+  postgres:
+    image: postgres:16-alpine
+    container_name: edop-postgres
+    profiles: ["postgres"]
+    environment:
+      - POSTGRES_USER=edop
+      - POSTGRES_PASSWORD=edop_local_pw
+      - POSTGRES_DB=edop
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -- OpenSearch : vector DB / semantic search (AI phase) --
+  opensearch:
+    image: opensearchproject/opensearch:2
+    container_name: edop-opensearch
+    profiles: ["search"]
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Edop_Local_123!
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+  # -- Ollama : local LLM + embeddings (AI phase) --
+  ollama:
+    image: ollama/ollama:latest
+    container_name: edop-ollama
+    profiles: ["ai"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+  # -- MinIO : OPTIONAL S3-compatible store (LocalStack already has S3) --
+  minio:
+    image: minio/minio:latest
+    container_name: edop-minio
+    profiles: ["storage"]
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=edop
+      - MINIO_ROOT_PASSWORD=edop_local_pw
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+# ------------------------------------------------------------
+#  Named volumes — survive `docker compose down`
+#  (wiped only by `docker compose down -v`)
+# ------------------------------------------------------------
+volumes:
+  redis-data:
+  postgres-data:
+  opensearch-data:
+  ollama-data:
+  minio-data:
