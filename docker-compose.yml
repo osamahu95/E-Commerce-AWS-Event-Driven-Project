@@ -6,12 +6,14 @@ services:
     container_name: edop-localstack
     profiles: ["core"]
     ports:
-      - "4566:4566"                       # single "edge" endpoint for every AWS service
+      - "4566:4566"                       
     environment:
-      - SERVICES=dynamodb,dynamodbstreams,sns,sqs   # emulate ONLY what v1 needs
+      - SERVICES=dynamodb,dynamodbstreams,sns,sqs
       - AWS_DEFAULT_REGION=us-east-1
-      - DYNAMODB_SHARE_DB=1               # one shared DynamoDB -> no region/account "table not found"
-      - DEBUG=1                           # verbose logs while learning; set 0 later
+      - DYNAMODB_SHARE_DB=1               
+      - DEBUG=1         
+    volumes:
+      - ./infra/dynamodb/create-tables.sh:/etc/localstack/init/ready.d/01-create-tables.sh                  
   # ---------- CORE (v1) : idempotency / dedup store ----------
   redis:
     image: redis:7-alpine
