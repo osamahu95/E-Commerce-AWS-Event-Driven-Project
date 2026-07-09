@@ -13,7 +13,8 @@ services:
       - DYNAMODB_SHARE_DB=1               
       - DEBUG=1         
     volumes:
-      - ./infra/dynamodb/create-tables.sh:/etc/localstack/init/ready.d/01-create-tables.sh                  
+      - ./infra/dynamodb/create-tables.sh:/etc/localstack/init/ready.d/01-create-tables.sh
+      - ./infra/localstack/bootstrap.sh:/etc/localstack/init/ready.d/02-bootstrap.sh                  
   # ---------- CORE (v1) : idempotency / dedup store ----------
   redis:
     image: redis:7-alpine
