@@ -29,6 +29,7 @@
 - [How the core patterns work](#how-the-core-patterns-work)
 - [Testing](#testing)
 - [How to extend this project](#how-to-extend-this-project)
+- [Important tools to install](#important-tools-to-install)
 - [License](#license)
 
 ---
@@ -372,6 +373,16 @@ Keep the rule of thumb: **business logic in `domain`/`application`, all I/O in
 change.
 
 ---
+
+## Important Tools to Install
+
+There are some important tools to install
+1. **LS-Expolorer** (LocalStack Explorer): It is a UI interface which gives you access to interact with your resources inside our LocalStack
+```bash
+docker run -d --name ls-explorer -p 3001:3001 `
+  -e LOCALSTACK_ENDPOINT=http://host.docker.internal:4566 `
+  fgiova/localstack-explorer:latest
+```
 
 ## License
 
