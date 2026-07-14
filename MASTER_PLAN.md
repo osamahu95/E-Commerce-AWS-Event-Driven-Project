@@ -458,7 +458,7 @@ Each version is independently runnable. Build in order. Every version follows th
 | **v6** | Real-time analytics | Kinesis analytics lane parallel to the core flow: checkpointing, replay, windowed order metrics. |
 | **v7** | Reliability hardening | Reintroduce a **saga orchestrator + compensation** to turn the happy path into a fault-tolerant distributed transaction. |
 | **v8** | Advanced AI | Multi-agent system (support + triage + recommendation agents), a product/customer knowledge graph feeding agent reasoning, deeper agentic workflows. |
-| **Deploy** | Real AWS | Package services for Elastic Beanstalk / Lambda; swap emulators for real AWS by dropping `endpoint_url`. |
+| **Deploy** | Real AWS | Package services for Elastic Beanstalk / Lambda; swap emulators for real AWS by dropping `endpoint_url`. Deploy incrementally per version, not big-bang at the end. |
 
 ---
 
